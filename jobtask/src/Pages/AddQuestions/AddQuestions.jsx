@@ -1,11 +1,14 @@
 import React, { useState } from 'react';  
 import { useForm } from "react-hook-form";
 import Papa from 'papaparse'; 
+import { toast } from 'react-hot-toast';
 
 
 const AddQuestions = () => {
     const [allQuestion, setAllQuestion] = useState([]);
-    const [fileInput, setFileInput] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [fileInput, setFileInput] = useState(null);
+    const [insertBtn, setInsertBtn] = useState(false)
     const { register, formState: { errors }, handleSubmit } = useForm();
 
 
@@ -50,6 +53,7 @@ const AddQuestions = () => {
                     QuestionsArray.push(question);
 
                     setAllQuestion(QuestionsArray);
+                    setInsertBtn(true);
 
                     
                 })
@@ -61,6 +65,26 @@ const AddQuestions = () => {
 
     const handelInput= e =>{
         setFileInput(e.target.files[0].name)
+    }
+
+
+    const handelToSaveInDatabase = e =>{
+        setLoading(true)
+        fetch(`https://jobtask-server-bice.vercel.app/questions`,{
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify(allQuestion)
+        })
+            .then(res => res.json())
+            .then(data => {
+                toast.success('YOur inserted data successfully added');
+                setLoading(false)
+                setInsertBtn(false)
+            })
+            .catch(error => {
+                toast.error(error.message)
+                setLoading(false)
+            })
     }
     
 
@@ -96,6 +120,11 @@ const AddQuestions = () => {
                     <button type='submit' className='mx-auto mt-5 py-2 px-3 border rounded text-xl border-accent bg-accent text-white hover:bg-white hover:text-accent'>
                         Add
                     </button>
+                    {insertBtn && <button  type='submit' onClick={handelToSaveInDatabase} disabled={loading? true : false} className='mx-auto mt-5 py-2 px-3 border rounded text-xl border-accent hover:bg-accent hover:text-white bg-white text-accent'>
+                        {
+                            loading? 'Loading...' : 'insert in database'
+                        }
+                    </button>}
                 </form>
         </div>
     );
